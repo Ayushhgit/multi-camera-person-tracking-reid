@@ -1,0 +1,3 @@
+Multi-Camera Pedestrian Tracking & Identity Fusion
+
+This project implements a multi-camera pedestrian tracking system using YOLOv8-nano and DeepSORT on MOT17 sequences. Each camera stream is processed independently for detection and tracking, while a global identity manager fuses identities across cameras using appearance embeddings and cosine similarity. The system maintains persistent cross-camera identities and generates pedestrian analytics such as trajectories and dwell time.
