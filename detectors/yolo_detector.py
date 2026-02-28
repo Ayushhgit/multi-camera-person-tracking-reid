@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 import numpy as np 
 
-class YOLODetector:
+class YoloDetector:
     """
     YOLOv8 person detector wrapper.
 
@@ -9,8 +9,8 @@ class YOLODetector:
     [(x1, y1, x2, y2, confidence), ...]
     """
 
-    def __init__(self, model_path: str="yolo8n.pt", conf_threshold:float = 0.4, device: str = "cpu"):
-        self.model = YOLO(model_path) 
+    def __init__(self, model_path: str="yolov8n.pt", conf_threshold:float = 0.4, device: str = "cpu"):
+        self.model = YOLO(model_path)         
         self.conf = conf_threshold
         self.device = device
 

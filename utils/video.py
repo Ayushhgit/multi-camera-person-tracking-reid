@@ -1,13 +1,13 @@
 import os
 import cv2
 
-class MOTCamers:
+class MOTCamera:
     """
     Loads MOT17 sequence as a virtual camera stream.
     Reads frames sequentially from img1 folder.
     """
 
-    def __init__(self, img_dir: str, max_frames: int = 500, size=(640, 360)):
+    def __init__(self, img_dir: str, max_frames: int = 1500, size=(640, 360)):
         self.img_dir = img_dir
         self.size = size
 

@@ -13,10 +13,12 @@ class GlobalIdentityManager:
         (camera_id, local_track_id) → global_id
     """
 
-    def __init__(self, similarity_threshold=0.7):
+    MAX_GALLERY_SIZE = 50  # max embeddings stored per person
+
+    def __init__(self, similarity_threshold=0.85):
         self.sim_threshold = similarity_threshold
 
-        # gallery: global_id -> embedding vector
+        # gallery: global_id -> list of embedding vectors
         self.gallery = {}
 
         # mapping: (cam_id, local_id) -> global_id
@@ -24,15 +26,22 @@ class GlobalIdentityManager:
 
         self.next_global_id = 1
 
+    def _get_mean_embedding(self, gid):
+        """Average embedding for a global identity."""
+        embeddings = self.gallery[gid]
+        return np.mean(embeddings, axis=0)
+
     def _match_embedding(self, embedding):
         """
         Find best matching global identity for embedding.
+        Compares against the mean embedding of each gallery entry.
         """
         best_gid = None
         best_sim = 0.0
 
-        for gid, g_emb in self.gallery.items():
-            sim = cosine_similarity(embedding, g_emb)
+        for gid in self.gallery:
+            mean_emb = self._get_mean_embedding(gid)
+            sim = cosine_similarity(embedding, mean_emb)
             if sim > best_sim:
                 best_sim = sim
                 best_gid = gid
@@ -41,6 +50,15 @@ class GlobalIdentityManager:
             return best_gid
 
         return None
+
+    def _add_to_gallery(self, gid, embedding):
+        """Add embedding to gallery, keeping at most MAX_GALLERY_SIZE."""
+        if gid not in self.gallery:
+            self.gallery[gid] = [embedding]
+        else:
+            self.gallery[gid].append(embedding)
+            if len(self.gallery[gid]) > self.MAX_GALLERY_SIZE:
+                self.gallery[gid].pop(0)
 
     def assign_global_ids(self, camera_id, tracks):
         """
@@ -64,6 +82,10 @@ class GlobalIdentityManager:
             key = (camera_id, local_id)
             if key in self.local_to_global:
                 global_id = self.local_to_global[key]
+
+                # Update gallery with latest embedding for better matching
+                if track.features and len(track.features) > 0:
+                    self._add_to_gallery(global_id, track.features[-1])
             else:
                 # Get appearance embedding from DeepSORT
                 if track.features is None or len(track.features) == 0:
@@ -75,9 +97,10 @@ class GlobalIdentityManager:
 
                 if matched_gid is not None:
                     global_id = matched_gid
+                    self._add_to_gallery(global_id, emb)
                 else:
                     global_id = self.next_global_id
-                    self.gallery[global_id] = emb
+                    self._add_to_gallery(global_id, emb)
                     self.next_global_id += 1
 
                 self.local_to_global[key] = global_id

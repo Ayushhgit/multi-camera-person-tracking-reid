@@ -1,3 +1,9 @@
 ultralytics 
 opencv-python 
 numpy
+deep-sort-realtime
+streamlit
+pandas
+setuptools<80
+torch
+torchvision
